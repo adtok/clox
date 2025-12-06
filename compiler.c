@@ -13,19 +13,33 @@ typedef struct
     bool panicMode;
 } Parser;
 
+typedef enum {
+    PREC_NONE,
+    PREC_ASSIGNMENT,    // =
+    PREC_OR,            // or
+    PREC_AND,           // and
+    PREC_EQUALITY,      // == !=
+    PREC_COMPARISON,    // < > <= >=
+    PREC_TERM,          // + -
+    PREC_FACTOR,        // * /
+    PREC_UNARY,         // ! -
+    PREC_CALL,          // . ( )
+    PREC_PRIMARY
+} Precedence;
+
 Parser parser;
 Chunk *compilingChunk;
 
 static Chunk *currentChunk()
 {
-    return comilingChunk;
+    return compilingChunk;
 }
 
 static void errorAt(Token *token, const char *message)
 {
     if (parser.panicMode) return;
     parser.panicMode = true;
-    fprintf(stderr, "[line &d] Error", token->line);
+    fprintf(stderr, "[line %d] Error", token->line);
 
     if (token->type == TOKEN_EOF)
     {
@@ -37,7 +51,7 @@ static void errorAt(Token *token, const char *message)
     }
     else
     {
-        fprintf(stderr, " at '&.*s'", token->length, token->start);
+        fprintf(stderr, " at '%.*s'", token->length, token->start);
     }
 
     fprintf(stderr, ": %s\n", message);
@@ -51,7 +65,7 @@ static void error(const char* message)
 
 static void errorAtCurrent(const char *message)
 {
-    errorAt(&parser.current, message)
+    errorAt(&parser.current, message);
 }
 
 static void advance()
@@ -94,9 +108,63 @@ static void emitReturn()
     emitByte(OP_RETURN);
 }
 
+static uint8_t makeConstant(Value value)
+{
+    int constant = addConstant(currentChunk(), value);
+    if (constant > UINT8_MAX)
+    {
+        error("Too many constants in one chunk.");
+        return 0;
+    }
+
+    return (uint8_t)constant;
+}
+
+static void emitConstant(Value value)
+{
+    emitBytes(OP_CONSTANT, makeConstant(value));
+}
+
 static void endCompiler()
 {
     emitReturn();
+}
+
+static void expression()
+{
+    parsePrecedence(PREC_ASSIGNMENT);
+}
+
+static void grouping()
+{
+    expression();
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
+}
+
+static void number()
+{
+    double value = strtod(parser.previous.start, NULL);
+    emitConstant(value);
+}
+
+static void unary()
+{
+    TokenType operatorType = parser.previous.type;
+
+    // Compile the operand.
+    parsePrecedence(PREC_UNARY);
+
+    // Emit the operator instruction.
+    switch (operatorType)
+    {
+        case TOKEN_MINUS: emitByte(OP_NEGATE); break;
+        default: return; // unreachable
+    }
+}
+
+static void parsePrecedence(Precedence presedence)
+{
+    // What goes here
 }
 
 bool compile(const char *source, Chunk *chunk)

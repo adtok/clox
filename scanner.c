@@ -114,7 +114,7 @@ static void skipWhitespace()
     }
 }
 
-static Token checkKeyword(int start, int length
+static TokenType checkKeyword(int start, int length,
                           const char* rest,
                           TokenType type)
 {
@@ -127,7 +127,7 @@ static Token checkKeyword(int start, int length
     return TOKEN_IDENTIFIER;
 }
 
-static Token identifierType()
+static TokenType identifierType()
 {
     switch (scanner.start[0])
     {

@@ -67,7 +67,7 @@ static InterpretResult run()
 #define BINARY_OP(valueType, op)                        \
     do                                                  \
     {                                                   \
-        if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(0))) \
+        if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) \
         {                                               \
             runtimeError("Operands must be numbers.");  \
             return INTERPRET_RUNTIME_ERROR;             \

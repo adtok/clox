@@ -57,7 +57,7 @@ static void errorAt(Token *token, const char *message)
 
     if (token->type == TOKEN_EOF)
     {
-        fprintf(stderr, "at end");
+        fprintf(stderr, " at end");
     }
     else if (token->type == TOKEN_ERROR)
     {
@@ -90,9 +90,9 @@ static void advance()
     {
         parser.current = scanToken();
         if (parser.current.type != TOKEN_ERROR) break;
-    }
 
-    errorAtCurrent(parser.current.start);
+        errorAtCurrent(parser.current.start);
+    }
 }
 
 static void consume(TokenType type, const char *message)
@@ -291,6 +291,7 @@ static ParseRule* getRule(TokenType type)
 bool compile(const char *source, Chunk *chunk)
 {
     initScanner(source);
+    compilingChunk = chunk;
 
     parser.hadError = false;
     parser.panicMode = false;
